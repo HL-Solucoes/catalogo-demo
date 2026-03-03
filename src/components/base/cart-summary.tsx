@@ -226,7 +226,7 @@ export function CartSummary() {
               <div className="flex flex-col gap-3 pt-2">
                 <Button
                   variant="outline"
-                  className="h-auto flex-col gap-2 p-4 text-left"
+                  className="h-auto flex-col gap-2 p-4 text-left whitespace-normal w-full"
                   onClick={() => setView("whatsapp")}
                 >
                   <div className="flex w-full items-center gap-3">
@@ -244,7 +244,7 @@ export function CartSummary() {
 
                 <Button
                   variant="outline"
-                  className="h-auto flex-col gap-2 p-4 text-left"
+                  className="h-auto flex-col gap-2 p-4 text-left whitespace-normal w-full"
                   onClick={() => setView("form")}
                 >
                   <div className="flex w-full items-center gap-3">
