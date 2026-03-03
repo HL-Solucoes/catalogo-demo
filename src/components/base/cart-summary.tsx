@@ -102,7 +102,8 @@ export function CartSummary() {
     reset,
     formState: { errors },
   } = useForm<OrderFormValues>({
-    resolver: zodResolver(orderFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(orderFormSchema as any),
     defaultValues: {
       name: "",
       phone: "",
