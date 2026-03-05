@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Send,
   ArrowLeft,
+  Loader2,
 } from "lucide-react";
 import {
   Dialog,
@@ -31,8 +32,11 @@ import {
   orderFormSchema,
   type OrderFormValues,
 } from "@/shared/schemas/order.schema";
+import { useCheckoutUseCase } from "@/modules/order/use-cases";
 
 const WHATSAPP_NUMBER = "5500000000000"; // Mock number
+const COMPANY_ID = process.env.NEXT_PUBLIC_COMPANY_ID || "";
+const CATALOG_ID = process.env.NEXT_PUBLIC_CATALOG_ID || "";
 
 function buildWhatsAppMessage(
   items: ReturnType<typeof selectCartItems>,
@@ -88,6 +92,11 @@ function formatCEP(value: string): string {
   return `${digits.slice(0, 5)}-${digits.slice(5)}`;
 }
 
+interface CheckoutResult {
+  id: string;
+  trackingCodeId: string;
+}
+
 export function CartSummary() {
   const items = useCartStore(selectCartItems);
   const total = useCartStore(selectCartTotal);
@@ -95,6 +104,12 @@ export function CartSummary() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<ModalView>("choose");
   const [copied, setCopied] = useState(false);
+  const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(
+    null,
+  );
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const { checkout, isCheckingOut } = useCheckoutUseCase();
 
   const {
     control,
@@ -145,6 +160,8 @@ export function CartSummary() {
   const handleOpenModal = () => {
     setView("choose");
     setCopied(false);
+    setCheckoutError(null);
+    setCheckoutResult(null);
     reset();
     setOpen(true);
   };
@@ -153,18 +170,61 @@ export function CartSummary() {
     setOpen(isOpen);
     if (!isOpen) {
       setView("choose");
+      setCheckoutError(null);
       reset();
     }
   };
 
+  const doCheckout = async (
+    source: "WHATSAPP" | "CATALOG",
+    formData?: OrderFormValues,
+  ) => {
+    setCheckoutError(null);
+    try {
+      const address = formData
+        ? [
+            formData.street,
+            formData.number,
+            formData.complement,
+            formData.neighborhood,
+            formData.city,
+            formData.state,
+            formData.cep,
+          ]
+            .filter(Boolean)
+            .join(", ")
+        : undefined;
+
+      const result = await checkout({
+        companyId: COMPANY_ID,
+        catalogId: CATALOG_ID,
+        source,
+        items: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.qty,
+          unitPrice: item.is_price_visible ? String(item.price) : null,
+        })),
+        customerName: formData?.name || null,
+        customerPhone: formData?.phone || null,
+        customerAddress: address || null,
+        description: formData?.description || null,
+        total: total > 0 ? String(total) : null,
+      });
+
+      setCheckoutResult({
+        id: result.id,
+        trackingCodeId: result.trackingCodeId,
+      });
+      setView("success");
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Erro ao finalizar pedido";
+      setCheckoutError(errorMsg);
+    }
+  };
+
   const onSubmit = (data: OrderFormValues) => {
-    // Mock: log to console & show success
-    console.log("📦 Pedido finalizado via catálogo:", {
-      form: data,
-      items,
-      total,
-    });
-    setView("success");
+    doCheckout("CATALOG", data);
   };
 
   const handleSuccessClose = () => {
@@ -172,6 +232,7 @@ export function CartSummary() {
     reset();
     setOpen(false);
     setView("choose");
+    setCheckoutResult(null);
   };
 
   return (
@@ -583,15 +644,34 @@ export function CartSummary() {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-2 pt-1">
-                  <Button type="submit" className="w-full gap-2">
-                    <Send className="size-4" />
-                    Enviar pedido
+                  {checkoutError && (
+                    <p className="text-xs text-destructive text-center">
+                      {checkoutError}
+                    </p>
+                  )}
+                  <Button
+                    type="submit"
+                    className="w-full gap-2"
+                    disabled={isCheckingOut}
+                  >
+                    {isCheckingOut ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="size-4" />
+                        Enviar pedido
+                      </>
+                    )}
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="gap-1.5"
+                    disabled={isCheckingOut}
                     onClick={() => setView("choose")}
                   >
                     <ArrowLeft className="size-3.5" />
@@ -613,6 +693,22 @@ export function CartSummary() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Recebemos seu pedido e entraremos em contato em breve.
                 </p>
+                {checkoutResult && (
+                  <div className="mt-3 space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      Código de rastreio:{" "}
+                      <span className="font-mono font-semibold text-foreground">
+                        {checkoutResult.trackingCodeId}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      ID do pedido:{" "}
+                      <span className="font-mono text-foreground">
+                        {checkoutResult.id}
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
               <Button className="w-full" onClick={handleSuccessClose}>
                 Voltar ao catálogo

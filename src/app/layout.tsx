@@ -5,6 +5,7 @@ import "./globals.css";
 import { Header } from "@/components/global/header";
 import { MobileBottomNav } from "@/components/global/mobile-bottom-nav";
 import { FloatingCart } from "@/components/global/floating-cart";
+import { QueryProvider } from "@/shared/providers/query-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,10 +42,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
-          <main className="min-h-screen pb-20 md:pb-0">{children}</main>
-          <MobileBottomNav />
-          <FloatingCart />
+          <QueryProvider>
+            <Header />
+            <main className="min-h-screen pb-20 md:pb-0">{children}</main>
+            <MobileBottomNav />
+            <FloatingCart />
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -10,6 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function ProdutosPage() {
+  // Mock products are only used when NEXT_PUBLIC_USE_MOCK=true
+  // The config is read client-side, but we always pass mock data
+  // (it will be ignored by ProductsClient when useMock=false)
   const products = getActiveProducts();
 
   return (

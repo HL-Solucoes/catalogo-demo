@@ -1,0 +1,6 @@
+export const CatalogQueryKeys = {
+  GET_CATALOG: "GET_CATALOG",
+  LIST_CATEGORIES: "LIST_CATEGORIES",
+  LIST_PRODUCTS: "LIST_PRODUCTS",
+  GET_PRODUCT: "GET_PRODUCT",
+} as const;

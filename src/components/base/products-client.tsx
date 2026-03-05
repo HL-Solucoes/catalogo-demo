@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useRef, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X, SlidersHorizontal } from "lucide-react";
+import { Search, X, SlidersHorizontal, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  CATEGORIES,
+  CATEGORIES as MOCK_CATEGORIES,
   SORT_OPTIONS,
   type CategoryId,
   type SortOption,
@@ -20,12 +20,17 @@ import {
 import type { Product } from "@/shared/types/product";
 import { validateFilters, buildQueryString } from "@/shared/lib/query";
 import { ProductGrid } from "@/components/base/product-grid";
+import { appConfig } from "@/shared/config/app.config";
+import {
+  useListProductsUseCase,
+  useListCategoriesUseCase,
+} from "@/modules/catalog/use-cases";
 
 interface ProductsClientProps {
-  allProducts: Product[];
+  allProducts?: Product[];
 }
 
-export function ProductsClient({ allProducts }: ProductsClientProps) {
+export function ProductsClient({ allProducts = [] }: ProductsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -41,6 +46,61 @@ export function ProductsClient({ allProducts }: ProductsClientProps) {
   const [search, setSearch] = useState(initialFilters.q);
   const [sort, setSort] = useState<SortOption>(initialFilters.sort);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // API hooks (only active when useMock=false)
+  const { products: apiProducts, isLoadingProducts } = useListProductsUseCase(
+    !appConfig.useMock
+      ? {
+          search: search || undefined,
+          categoryId: category !== "all" ? category : undefined,
+          page: 1,
+          limit: 100,
+        }
+      : undefined,
+  );
+
+  const { categories: apiCategories, isLoadingCategories } =
+    useListCategoriesUseCase(!appConfig.useMock);
+
+  // Build categories list
+  const categories = appConfig.useMock
+    ? MOCK_CATEGORIES
+    : [
+        { id: "all" as const, label: "Todos" },
+        ...apiCategories.map((c) => ({
+          id: c.id as CategoryId,
+          label: c.name,
+        })),
+      ];
+
+  // Resolve products source
+  const resolvedProducts: Product[] = appConfig.useMock
+    ? allProducts
+    : apiProducts.map((p) => ({
+        id: p.id,
+        idControl: p.idControl,
+        company_id: "",
+        catalog_id: "",
+        category_id: p.categoryId ?? undefined,
+        name: p.name,
+        title: p.title,
+        subtitle: p.subtitle ?? undefined,
+        description: p.description ?? undefined,
+        quantity: p.quantity,
+        alert_stock: p.alertStock,
+        status: p.status as Product["status"],
+        price: p.price ? parseFloat(p.price) : 0,
+        is_price_visible: p.isPriceVisible,
+        discount_percentage: p.discountPercentage
+          ? parseFloat(p.discountPercentage)
+          : undefined,
+        brand: p.brand ?? undefined,
+        tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [],
+        technical_specs: {},
+        image: p.images?.[0]?.url ?? "/products/bone-01.svg",
+        created_at: p.createdAt,
+        updated_at: p.createdAt,
+      }));
 
   // Update URL when filters change
   const updateURL = useCallback(
@@ -97,37 +157,38 @@ export function ProductsClient({ allProducts }: ProductsClientProps) {
     };
   }, []);
 
-  // Filter products
-  const filtered = allProducts.filter((p) => {
-    // Category filter
-    if (category !== "all" && p.category_id !== category) return false;
+  // Filter products (only for mock — API handles filtering server-side)
+  const filtered = appConfig.useMock
+    ? resolvedProducts.filter((p) => {
+        if (category !== "all" && p.category_id !== category) return false;
+        if (search) {
+          const q = search.toLowerCase();
+          const matchesSearch =
+            p.title.toLowerCase().includes(q) ||
+            p.name.toLowerCase().includes(q) ||
+            p.tags.some((t) => t.toLowerCase().includes(q)) ||
+            p.idControl.toLowerCase().includes(q) ||
+            (p.subtitle && p.subtitle.toLowerCase().includes(q));
+          if (!matchesSearch) return false;
+        }
+        return true;
+      })
+    : resolvedProducts;
 
-    // Search filter
-    if (search) {
-      const q = search.toLowerCase();
-      const matchesSearch =
-        p.title.toLowerCase().includes(q) ||
-        p.name.toLowerCase().includes(q) ||
-        p.tags.some((t) => t.toLowerCase().includes(q)) ||
-        p.idControl.toLowerCase().includes(q) ||
-        (p.subtitle && p.subtitle.toLowerCase().includes(q));
-      if (!matchesSearch) return false;
-    }
-
-    return true;
-  });
-
-  // Sort products
+  // Sort products (client-side for both modes)
   const sorted = [...filtered].sort((a, b) => {
     if (sort === "price_asc") return a.price - b.price;
     if (sort === "price_desc") return b.price - a.price;
-    return 0; // relevance = keep original order
+    return 0;
   });
 
   const hasActiveFilters =
     category !== "all" || search !== "" || sort !== "relevance";
   const currentSortLabel =
     SORT_OPTIONS.find((s) => s.value === sort)?.label ?? "Relevância";
+
+  const isLoading =
+    !appConfig.useMock && (isLoadingProducts || isLoadingCategories);
 
   return (
     <div className="space-y-4">
@@ -157,7 +218,7 @@ export function ProductsClient({ allProducts }: ProductsClientProps) {
       {/* Category pills + Sort */}
       <div className="animate-fade-in delay-100 flex items-center justify-between gap-2">
         <div className="flex flex-wrap gap-1.5 flex-1">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Button
               key={cat.id}
               variant={category === cat.id ? "default" : "outline"}
@@ -191,8 +252,16 @@ export function ProductsClient({ allProducts }: ProductsClientProps) {
         </DropdownMenu>
       </div>
 
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+          <Loader2 className="size-5 animate-spin" />
+          <span className="text-sm">Carregando produtos...</span>
+        </div>
+      )}
+
       {/* Active filters indicator */}
-      {hasActiveFilters && (
+      {!isLoading && hasActiveFilters && (
         <div className="animate-fade-in flex items-center gap-2">
           <span className="text-xs text-muted-foreground">
             {sorted.length} produto{sorted.length !== 1 ? "s" : ""} encontrado
@@ -210,7 +279,7 @@ export function ProductsClient({ allProducts }: ProductsClientProps) {
       )}
 
       {/* Product grid */}
-      <ProductGrid products={sorted} />
+      {!isLoading && <ProductGrid products={sorted} />}
     </div>
   );
 }
