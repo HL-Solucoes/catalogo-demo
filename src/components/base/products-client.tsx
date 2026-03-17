@@ -80,34 +80,39 @@ export function ProductsClient({ allProducts = [] }: ProductsClientProps) {
   // Resolve products source
   const resolvedProducts: Product[] = appConfig.useMock
     ? allProducts
-    : apiProducts.map((p) => ({
-        id: p.id,
-        idControl: p.idControl,
-        company_id: "",
-        catalog_id: "",
-        category_id: p.categoryId ?? undefined,
-        name: p.name,
-        title: p.title,
-        subtitle: p.subtitle ?? undefined,
-        description: p.description ?? undefined,
-        quantity: p.quantity,
-        alert_stock: p.alertStock,
-        status: p.status as Product["status"],
-        price: p.price ? parseFloat(p.price) : 0,
-        is_price_visible: p.isPriceVisible,
-        discount_percentage: p.discountPercentage
-          ? (() => {
-              const parsed = parseFloat(p.discountPercentage);
-              return parsed > 0 ? parsed : undefined;
-            })()
-          : undefined,
-        brand: p.brand ?? undefined,
-        tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [],
-        technical_specs: {},
-        image: p.images?.[0]?.url ?? "/products/bone-01.svg",
-        created_at: p.createdAt,
-        updated_at: p.createdAt,
-      }));
+    : apiProducts.map((p) => {
+        const priceValue = p.price ? parseFloat(p.price) : 0;
+        const isPriceVisible = p.isPriceVisible && priceValue > 0;
+
+        return {
+          id: p.id,
+          idControl: p.idControl,
+          company_id: "",
+          catalog_id: "",
+          category_id: p.categoryId ?? undefined,
+          name: p.name,
+          title: p.title,
+          subtitle: p.subtitle ?? undefined,
+          description: p.description ?? undefined,
+          quantity: p.quantity,
+          alert_stock: p.alertStock,
+          status: p.status as Product["status"],
+          price: priceValue,
+          is_price_visible: isPriceVisible,
+          discount_percentage: p.discountPercentage
+            ? (() => {
+                const parsed = parseFloat(p.discountPercentage);
+                return parsed > 0 ? parsed : undefined;
+              })()
+            : undefined,
+          brand: p.brand ?? undefined,
+          tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [],
+          technical_specs: {},
+          image: p.images?.[0]?.url ?? "/products/bone-01.svg",
+          created_at: p.createdAt,
+          updated_at: p.createdAt,
+        };
+      });
 
   // Update URL when filters change
   const updateURL = useCallback(
