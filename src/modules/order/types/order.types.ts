@@ -1,7 +1,7 @@
 export interface ICheckoutItem {
   productId: string;
   quantity: number;
-  unitPrice?: string | null;
+  unitPrice?: number | null;
 }
 
 export interface ICheckoutPayload {
@@ -14,7 +14,7 @@ export interface ICheckoutPayload {
   customerPhone?: string | null;
   customerAddress?: string | null;
   description?: string | null;
-  total?: string | null;
+  total?: number | null;
 }
 
 export interface ICheckoutResponse {

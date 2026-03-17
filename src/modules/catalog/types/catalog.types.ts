@@ -1,8 +1,12 @@
+export type CatalogFinishType = "ALL" | "AUTOMATION" | "DIRECT";
+
 export interface ICatalog {
   id: string;
   name: string;
   description: string | null;
   url: string;
+  finishType: CatalogFinishType;
+  companyId?: string;
 }
 
 export interface ICategory {

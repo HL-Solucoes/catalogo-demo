@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   CATEGORIES as MOCK_CATEGORIES,
+  VALID_CATEGORIES,
   SORT_OPTIONS,
   type CategoryId,
   type SortOption,
@@ -36,11 +37,14 @@ export function ProductsClient({ allProducts = [] }: ProductsClientProps) {
   const [, startTransition] = useTransition();
 
   // Read initial values from URL
-  const initialFilters = validateFilters({
-    category: searchParams.get("category") ?? undefined,
-    q: searchParams.get("q") ?? undefined,
-    sort: searchParams.get("sort") ?? undefined,
-  });
+  const initialFilters = validateFilters(
+    {
+      category: searchParams.get("category") ?? undefined,
+      q: searchParams.get("q") ?? undefined,
+      sort: searchParams.get("sort") ?? undefined,
+    },
+    appConfig.useMock ? VALID_CATEGORIES : undefined,
+  );
 
   const [category, setCategory] = useState<CategoryId>(initialFilters.category);
   const [search, setSearch] = useState(initialFilters.q);
@@ -92,7 +96,10 @@ export function ProductsClient({ allProducts = [] }: ProductsClientProps) {
         price: p.price ? parseFloat(p.price) : 0,
         is_price_visible: p.isPriceVisible,
         discount_percentage: p.discountPercentage
-          ? parseFloat(p.discountPercentage)
+          ? (() => {
+              const parsed = parseFloat(p.discountPercentage);
+              return parsed > 0 ? parsed : undefined;
+            })()
           : undefined,
         brand: p.brand ?? undefined,
         tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [],

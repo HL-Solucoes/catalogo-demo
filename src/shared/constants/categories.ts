@@ -5,7 +5,7 @@ export const CATEGORIES = [
   { id: "camisas", label: "Camisas" },
 ] as const;
 
-export type CategoryId = (typeof CATEGORIES)[number]["id"];
+export type CategoryId = (typeof CATEGORIES)[number]["id"] | (string & {});
 
 export const VALID_CATEGORIES = CATEGORIES.map((c) => c.id);
 

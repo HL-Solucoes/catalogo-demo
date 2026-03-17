@@ -68,10 +68,10 @@ export const ProductCard = memo(function ProductCard({
 
   const outOfStock = product.quantity <= 0;
   const qtyInCart = cartItem?.qty ?? 0;
-  const hasDiscount =
-    product.discount_percentage && product.discount_percentage > 0;
+  const discountPercentage = Number(product.discount_percentage ?? 0);
+  const hasDiscount = discountPercentage > 0;
   const finalPrice = hasDiscount
-    ? formatDiscount(product.price, product.discount_percentage!)
+    ? formatDiscount(product.price, discountPercentage)
     : product.price;
 
   return (
@@ -98,7 +98,7 @@ export const ProductCard = memo(function ProductCard({
           )}
           {hasDiscount && !outOfStock && (
             <Badge className="absolute top-2 left-2 bg-destructive text-[10px]">
-              -{product.discount_percentage}%
+              -{discountPercentage}%
             </Badge>
           )}
         </div>

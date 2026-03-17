@@ -1,8 +1,4 @@
-import {
-  VALID_CATEGORIES,
-  type CategoryId,
-  type SortOption,
-} from "../constants/categories";
+import { type CategoryId, type SortOption } from "../constants/categories";
 
 const MAX_SEARCH_LENGTH = 60;
 
@@ -16,10 +12,14 @@ export function validateFilters(params: {
   category?: string;
   q?: string;
   sort?: string;
-}): ValidatedFilters {
-  const category = VALID_CATEGORIES.includes(params.category as CategoryId)
-    ? (params.category as CategoryId)
-    : "all";
+}, allowedCategories?: string[]): ValidatedFilters {
+  const categoryParam =
+    typeof params.category === "string" ? params.category : undefined;
+  const category =
+    categoryParam &&
+    (allowedCategories ? allowedCategories.includes(categoryParam) : true)
+      ? (categoryParam as CategoryId)
+      : "all";
 
   const q =
     typeof params.q === "string"

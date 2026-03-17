@@ -26,10 +26,10 @@ export function ProductDetailClient({ product }: Props) {
 
   const outOfStock = product.quantity <= 0;
   const qtyInCart = cartItem?.qty ?? 0;
-  const hasDiscount =
-    product.discount_percentage && product.discount_percentage > 0;
+  const discountPercentage = Number(product.discount_percentage ?? 0);
+  const hasDiscount = discountPercentage > 0;
   const finalPrice = hasDiscount
-    ? formatDiscount(product.price, product.discount_percentage!)
+    ? formatDiscount(product.price, discountPercentage)
     : product.price;
 
   return (
@@ -89,7 +89,7 @@ export function ProductDetailClient({ product }: Props) {
                       {formatCurrency(product.price)}
                     </span>
                     <Badge variant="destructive" className="text-xs">
-                      -{product.discount_percentage}%
+                      -{discountPercentage}%
                     </Badge>
                   </>
                 )}

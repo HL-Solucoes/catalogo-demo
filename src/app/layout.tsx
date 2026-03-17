@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   },
   description:
     "Catálogo digital de atacado de moda country e acessórios. Bonés, carteiras, camisas e muito mais.",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({

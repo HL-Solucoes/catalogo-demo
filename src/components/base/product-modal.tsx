@@ -23,10 +23,10 @@ interface ProductModalProps {
 }
 
 export function ProductModal({ product, open, onClose }: ProductModalProps) {
-  const hasDiscount =
-    product.discount_percentage && product.discount_percentage > 0;
+  const discountPercentage = Number(product.discount_percentage ?? 0);
+  const hasDiscount = discountPercentage > 0;
   const finalPrice = hasDiscount
-    ? formatDiscount(product.price, product.discount_percentage!)
+    ? formatDiscount(product.price, discountPercentage)
     : product.price;
 
   return (
