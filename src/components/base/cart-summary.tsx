@@ -197,36 +197,34 @@ interface OrderStoredForm {
   description?: string;
 }
 
-interface WhatsappStoredForm
-  extends Pick<
-    WhatsappOrderFormValues,
-    | "name"
-    | "cpf"
-    | "cep"
-    | "street"
-    | "number"
-    | "complement"
-    | "neighborhood"
-    | "city"
-    | "state"
-    | "description"
-  > {}
+type WhatsappStoredForm = Pick<
+  WhatsappOrderFormValues,
+  | "name"
+  | "cpf"
+  | "cep"
+  | "street"
+  | "number"
+  | "complement"
+  | "neighborhood"
+  | "city"
+  | "state"
+  | "description"
+>;
 
-interface CatalogStoredForm
-  extends Pick<
-    OrderFormValues,
-    | "name"
-    | "phone"
-    | "cpf"
-    | "cep"
-    | "street"
-    | "number"
-    | "complement"
-    | "neighborhood"
-    | "city"
-    | "state"
-    | "description"
-  > {}
+type CatalogStoredForm = Pick<
+  OrderFormValues,
+  | "name"
+  | "phone"
+  | "cpf"
+  | "cep"
+  | "street"
+  | "number"
+  | "complement"
+  | "neighborhood"
+  | "city"
+  | "state"
+  | "description"
+>;
 
 interface OrderHistoryItem {
   id: string;
