@@ -1267,7 +1267,7 @@ export function CartSummary() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col gap-2 pt-1">
+                <div className="sticky bottom-0 -mx-6 flex flex-col gap-2 border-t bg-background px-6 pt-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
                   {checkoutError && (
                     <p className="text-xs text-destructive text-center">
                       {checkoutError}

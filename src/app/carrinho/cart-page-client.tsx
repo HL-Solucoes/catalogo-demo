@@ -36,20 +36,26 @@ export function CartPageClient() {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <ShoppingBag className="mb-4 size-16 text-muted-foreground/40" />
-        <p className="mb-2 text-lg font-medium text-muted-foreground">
-          Seu carrinho está vazio
-        </p>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Explore nossos produtos e adicione itens ao carrinho.
-        </p>
-        <Button asChild>
-          <Link href="/produtos" className="gap-2">
-            <ShoppingBag className="size-4" />
-            Ver Produtos
-          </Link>
-        </Button>
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <ShoppingBag className="mb-4 size-16 text-muted-foreground/40" />
+          <p className="mb-2 text-lg font-medium text-muted-foreground">
+            Seu carrinho está vazio
+          </p>
+          <p className="mb-6 text-sm text-muted-foreground">
+            Explore nossos produtos e adicione itens ao carrinho.
+          </p>
+          <Button asChild>
+            <Link href="/produtos" className="gap-2">
+              <ShoppingBag className="size-4" />
+              Ver Produtos
+            </Link>
+          </Button>
+        </div>
+
+        <div className="lg:sticky lg:top-20">
+          <CartSummary />
+        </div>
       </div>
     );
   }
