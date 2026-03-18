@@ -14,6 +14,7 @@ export interface ICheckoutPayload {
   customerPhone?: string | null;
   customerAddress?: string | null;
   description?: string | null;
+  message?: string;
   total?: number | null;
 }
 

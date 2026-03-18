@@ -51,6 +51,7 @@ const CATALOG_ID = process.env.NEXT_PUBLIC_CATALOG_ID || "";
 
 const TRACKING_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const TRACKING_DIGITS = "0123456789";
+const ITEM_BULLET = "•⁠  ⁠";
 const WHATSAPP_FORM_STORAGE_KEY = "whatsapp-order-form";
 const CATALOG_FORM_STORAGE_KEY = "catalog-order-form";
 const ORDER_HISTORY_STORAGE_KEY = "whatsapp-order-history";
@@ -97,9 +98,22 @@ function generateTrackingCode(): string {
   return code;
 }
 
-function buildWhatsAppMessage(
+type OrderMessageFormValues = {
+  name: string;
+  cpf: string;
+  cep: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  description?: string;
+};
+
+function buildOrderMessage(
   items: ReturnType<typeof selectCartItems>,
-  formData: WhatsappOrderFormValues,
+  formData: OrderMessageFormValues,
   trackingCodeId: string,
 ): string {
   const lines: string[] = [];
@@ -124,10 +138,20 @@ function buildWhatsAppMessage(
   lines.push("");
   lines.push("ITENS:");
   items.forEach((item) => {
-    lines.push(`- ID: ${item.idControl} | QTD: ${item.qty} | ${item.title}`);
+    lines.push(
+      `${ITEM_BULLET}ID: ${item.idControl} | QTD: ${item.qty} | ${item.title}`,
+    );
   });
 
   return lines.join("\n");
+}
+
+function buildWhatsAppMessage(
+  items: ReturnType<typeof selectCartItems>,
+  formData: WhatsappOrderFormValues,
+  trackingCodeId: string,
+): string {
+  return buildOrderMessage(items, formData, trackingCodeId);
 }
 
 type ModalView = "choose" | "whatsapp" | "form" | "success";
@@ -464,10 +488,19 @@ export function CartSummary() {
             .join(", ")
         : undefined;
 
+      const directTrackingCode =
+        source === "CATALOG" ? generateTrackingCode() : undefined;
+      const directMessage =
+        source === "CATALOG" && formData && directTrackingCode
+          ? buildOrderMessage(items, formData, directTrackingCode)
+          : undefined;
+
       const result = await checkout({
         companyId: resolvedCompanyId,
         catalogId: resolvedCatalogId,
         source,
+        trackingCodeId: directTrackingCode,
+        message: directMessage,
         items: items.map((item) => ({
           productId: item.productId,
           quantity: item.qty,
@@ -493,7 +526,7 @@ export function CartSummary() {
           trackingCodeId: result.trackingCodeId,
           source: "DIRECT",
           createdAt: result.createdAt || new Date().toISOString(),
-          message: null,
+          message: directMessage ?? null,
           items: items.map((item) => ({
             idControl: item.idControl,
             title: item.title,

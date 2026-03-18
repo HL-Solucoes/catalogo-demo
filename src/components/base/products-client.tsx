@@ -84,6 +84,8 @@ export function ProductsClient({ allProducts = [] }: ProductsClientProps) {
         const priceValue = p.price ? parseFloat(p.price) : 0;
         const isPriceVisible = p.isPriceVisible && priceValue > 0;
 
+        const images = (p.images ?? []).map((img) => img.url).filter(Boolean);
+
         return {
           id: p.id,
           idControl: p.idControl,
@@ -108,7 +110,8 @@ export function ProductsClient({ allProducts = [] }: ProductsClientProps) {
           brand: p.brand ?? undefined,
           tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [],
           technical_specs: {},
-          image: p.images?.[0]?.url ?? "/products/bone-01.svg",
+          image: images[0] ?? "/products/bone-01.svg",
+          images,
           created_at: p.createdAt,
           updated_at: p.createdAt,
         };

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import {
@@ -15,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { Product } from "@/shared/types/product";
 import { formatCurrency, formatDiscount } from "@/shared/lib/format";
+import { ProductImageCarousel } from "@/components/base/product-image-carousel";
 
 interface ProductModalProps {
   product: Product;
@@ -28,6 +28,10 @@ export function ProductModal({ product, open, onClose }: ProductModalProps) {
   const finalPrice = hasDiscount
     ? formatDiscount(product.price, discountPercentage)
     : product.price;
+  const imageList =
+    product.images && product.images.length > 0
+      ? product.images
+      : [product.image];
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -41,12 +45,11 @@ export function ProductModal({ product, open, onClose }: ProductModalProps) {
 
         {/* Image */}
         <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
-          <Image
-            src={product.image}
+          <ProductImageCarousel
+            images={imageList}
             alt={product.title}
-            fill
             sizes="(max-width: 640px) 90vw, 400px"
-            className="object-cover"
+            className="h-full w-full"
           />
         </div>
 

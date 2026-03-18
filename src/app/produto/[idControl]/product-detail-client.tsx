@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Plus, Minus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import type { Product } from "@/shared/types/product";
 import { formatCurrency, formatDiscount } from "@/shared/lib/format";
 import { useCartStore } from "@/shared/store/cart.store";
 import { useHydrated } from "@/shared/lib/use-hydrated";
+import { ProductImageCarousel } from "@/components/base/product-image-carousel";
 
 interface Props {
   product: Product;
@@ -31,6 +31,10 @@ export function ProductDetailClient({ product }: Props) {
   const finalPrice = hasDiscount
     ? formatDiscount(product.price, discountPercentage)
     : product.price;
+  const imageList =
+    product.images && product.images.length > 0
+      ? product.images
+      : [product.image];
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
@@ -45,13 +49,12 @@ export function ProductDetailClient({ product }: Props) {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden rounded-xl bg-muted">
-          <Image
-            src={product.image}
+          <ProductImageCarousel
+            images={imageList}
             alt={product.title}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
             priority
-            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="h-full w-full"
           />
           {outOfStock && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/60">

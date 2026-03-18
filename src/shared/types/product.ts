@@ -33,6 +33,7 @@ export interface Product {
 
   // Images
   image: string;
+  images?: string[];
 
   // Audit
   created_at: string;

@@ -11,6 +11,7 @@ import { formatCurrency, formatDiscount } from "@/shared/lib/format";
 import { useCartStore } from "@/shared/store/cart.store";
 import { useHydrated } from "@/shared/lib/use-hydrated";
 import { ProductModal } from "./product-modal";
+import { ProductImageCarousel } from "./product-image-carousel";
 
 function QtyInput({
   qty,
@@ -73,6 +74,11 @@ export const ProductCard = memo(function ProductCard({
   const finalPrice = hasDiscount
     ? formatDiscount(product.price, discountPercentage)
     : product.price;
+  const imageList =
+    product.images && product.images.length > 0
+      ? product.images
+      : [product.image];
+  const hasMultipleImages = imageList.length > 1;
 
   return (
     <>
@@ -81,14 +87,27 @@ export const ProductCard = memo(function ProductCard({
         onClick={() => setModalOpen(true)}
       >
         {/* Image */}
-        <div className="relative aspect-square shrink-0 overflow-hidden bg-muted">
-          <Image
-            src={product.image}
-            alt={product.title}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+        <div
+          className="relative aspect-square shrink-0 overflow-hidden bg-muted"
+          onClick={(e) => hasMultipleImages && e.stopPropagation()}
+          onPointerDown={(e) => hasMultipleImages && e.stopPropagation()}
+        >
+          {hasMultipleImages ? (
+            <ProductImageCarousel
+              images={imageList}
+              alt={product.title}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="h-full w-full"
+            />
+          ) : (
+            <Image
+              src={product.image}
+              alt={product.title}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          )}
           {outOfStock && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/60">
               <Badge variant="secondary" className="text-xs">
